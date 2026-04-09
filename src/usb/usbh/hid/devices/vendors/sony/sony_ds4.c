@@ -503,21 +503,17 @@ static bool ds4_auth_init_rsa(void) {
         return false;
     }
     
+    // Check if the key is RSA
+    if (mbedtls_pk_get_type(&ds4_pk_ctx) != MBEDTLS_PK_RSA) {
+        printf("[DS4 Auth] ERROR: Key is not RSA type\n");
+        return false;
+    }
+    
     mbedtls_rsa_context *rsa = mbedtls_pk_rsa(ds4_pk_ctx);
     
     ret = mbedtls_rsa_complete(rsa);
     if (ret != 0) {
         printf("[DS4 Auth] ERROR: mbedtls_rsa_complete failed (ret=%d)\n", -ret);
-        return false;
-    }
-    
-    // Set PSS padding
-    rsa->padding = MBEDTLS_RSA_PKCS_V21;
-    rsa->hash_id = MBEDTLS_MD_SHA256;
-    
-    ret = mbedtls_rsa_complete(rsa);
-    if (ret != 0) {
-        printf("[DS4 Auth] ERROR: mbedtls_rsa_complete (2nd) failed (ret=%d)\n", -ret);
         return false;
     }
     
@@ -555,13 +551,13 @@ static bool ds4_sign_nonce(void) {
         return false;
     }
     
-    // RSA-PSS sign
+    // RSA-PSS sign using PK layer for better compatibility
     uint8_t nonce_signature[256];
-    mbedtls_rsa_context *rsa = mbedtls_pk_rsa(ds4_pk_ctx);
-    int ret = mbedtls_rsa_rsassa_pss_sign(rsa, ds4_rng, NULL,
-                                           MBEDTLS_MD_SHA256,
-                                           32, hashed_nonce,
-                                           nonce_signature);
+    int ret = mbedtls_pk_sign(&ds4_pk_ctx,
+                              MBEDTLS_MD_SHA256,
+                              hashed_nonce, 32,
+                              nonce_signature, sizeof(nonce_signature),
+                              ds4_rng, NULL);
     if (ret != 0) {
         printf("[DS4 Auth] ERROR: RSA signing failed (ret=%d)\n", -ret);
         return false;
@@ -579,13 +575,23 @@ static bool ds4_sign_nonce(void) {
     memcpy(&ds4_auth.sig_buffer[offset], ds4_serial_binary, 16);
     offset += 16;
     
-    // 3. RSA modulus N (256 bytes)
-    mbedtls_mpi_write_binary(&rsa->N, &ds4_auth.sig_buffer[offset], 256);
-    offset += 256;
+    // 3. RSA modulus N and exponent E (256 bytes each)
+    mbedtls_rsa_context *rsa = mbedtls_pk_rsa(ds4_pk_ctx);
     
-    // 4. RSA exponent E (256 bytes)
-    mbedtls_mpi_write_binary(&rsa->E, &ds4_auth.sig_buffer[offset], 256);
-    offset += 256;
+    // For mbedTLS 3.x compatibility, use the appropriate functions to get N and E
+    #if MBEDTLS_VERSION_MAJOR >= 3
+        // In mbedTLS 3.x, use mbedtls_rsa_get_len() and appropriate access functions
+        mbedtls_mpi_write_binary(mbedtls_rsa_get_N(rsa), &ds4_auth.sig_buffer[offset], 256);
+        offset += 256;
+        mbedtls_mpi_write_binary(mbedtls_rsa_get_E(rsa), &ds4_auth.sig_buffer[offset], 256);
+        offset += 256;
+    #else
+        // For mbedTLS 2.x, use direct access
+        mbedtls_mpi_write_binary(&rsa->N, &ds4_auth.sig_buffer[offset], 256);
+        offset += 256;
+        mbedtls_mpi_write_binary(&rsa->E, &ds4_auth.sig_buffer[offset], 256);
+        offset += 256;
+    #endif
     
     // 5. Preset signature (256 bytes)
     size_t sig_len = ds4_signature_end - ds4_signature_start;
