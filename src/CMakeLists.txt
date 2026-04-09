@@ -320,7 +320,7 @@ function(embed_ds4_auth_resources target)
 endfunction()
 
 # Common libraries for USB host apps
-set(COMMON_LIBRARIES pico_stdlib pico_multicore hardware_pio pico_rand tinyusb_host tinyusb_board xinput_host mbedtls)
+set(COMMON_LIBRARIES pico_stdlib pico_multicore hardware_pio pico_rand tinyusb_host tinyusb_board xinput_host pico_mbedtls)
 
 # BTstack compile definitions (shared by all USB host apps)
 # Note: Most BTstack feature flags are in bt/btstack/btstack_config.h
