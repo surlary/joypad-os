@@ -590,15 +590,16 @@ static bool ds4_sign_nonce(void) {
         mbedtls_mpi_init(&N);
         mbedtls_mpi_init(&E);
         
-        // Extract N and E using the safe API
-        int ret = mbedtls_rsa_export(&rsa, &N, NULL, NULL, &E);
-        if (ret == 0) {
+        // Extract N and E using the safe API - correct the function signature for mbedTLS
+        // The correct signature is: mbedtls_rsa_export(rsa, N, P, Q, D, E)
+        int export_ret = mbedtls_rsa_export(rsa, &N, NULL, NULL, NULL, &E);
+        if (export_ret == 0) {
             mbedtls_mpi_write_binary(&N, &ds4_auth.sig_buffer[offset], 256);
             offset += 256;
             mbedtls_mpi_write_binary(&E, &ds4_auth.sig_buffer[offset], 256);
             offset += 256;
         } else {
-            printf("[DS4 Auth] ERROR: Could not export RSA parameters (ret=%d)\n", -ret);
+            printf("[DS4 Auth] ERROR: Could not export RSA parameters (ret=%d)\n", -export_ret);
             mbedtls_mpi_free(&N);
             mbedtls_mpi_free(&E);
             return false;
@@ -615,9 +616,9 @@ static bool ds4_sign_nonce(void) {
     #endif
     
     // 5. Preset signature (256 bytes)
-    size_t sig_len = ds4_signature_end - ds4_signature_start;
-    if (sig_len > 0 && sig_len <= 256) {
-        memcpy(&ds4_auth.sig_buffer[offset], ds4_signature_start, sig_len);
+    size_t preset_sig_len = ds4_signature_end - ds4_signature_start;
+    if (preset_sig_len > 0 && preset_sig_len <= 256) {
+        memcpy(&ds4_auth.sig_buffer[offset], ds4_signature_start, preset_sig_len);
     } else {
         memset(&ds4_auth.sig_buffer[offset], 0, 256);
     }
