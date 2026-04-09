@@ -372,7 +372,7 @@ function(joypad_target_common TARGET)
     
     # Embed DS4 PS4 auth resources (key.pem, serial.txt, sig.bin)
     # Only embed if the target uses USB host (has COMMON_SOURCES)
-    embed_ds4_auth_resources(${TARGET})
+    # embed_ds4_auth_resources(${TARGET})
 endfunction()
 
 # Add BTstack support to a target
@@ -997,6 +997,7 @@ target_include_directories(joypad_usb_pico PUBLIC
 target_link_libraries(joypad_usb_pico PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_pico)
 joypad_add_btstack(joypad_usb_pico)
+embed_ds4_auth_resources(joypad_usb_pico)
 
 # --- USB to USB (Raspberry Pi Pico W, PIO-USB) ---
 # PIO USB host on GP16/GP17, no WS2812, LED behind CYW43
@@ -1017,6 +1018,7 @@ target_include_directories(joypad_usb_pico_w PUBLIC
 target_link_libraries(joypad_usb_pico_w PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_pico_w)
 joypad_add_btstack(joypad_usb_pico_w)
+embed_ds4_auth_resources(joypad_usb_pico_w)
 
 # --- USB to USB (Raspberry Pi Pico 2 W, PIO-USB) ---
 # PIO USB host on GP16/GP17, no WS2812, LED behind CYW43
@@ -1037,6 +1039,7 @@ target_include_directories(joypad_usb_pico2_w PUBLIC
 target_link_libraries(joypad_usb_pico2_w PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_pico2_w)
 joypad_add_btstack(joypad_usb_pico2_w)
+embed_ds4_auth_resources(joypad_usb_pico2_w)
 
 # --- USB to USB (RP2040-Zero, PIO-USB) ---
 add_executable(joypad_usb_rp2040zero)
@@ -1058,6 +1061,7 @@ target_include_directories(joypad_usb_rp2040zero PUBLIC
 target_link_libraries(joypad_usb_rp2040zero PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_rp2040zero)
 joypad_add_btstack(joypad_usb_rp2040zero)
+embed_ds4_auth_resources(joypad_usb_rp2040zero)
 
 # --- USB to USB (Waveshare RP2350A, PIO-USB) ---
 add_executable(joypad_usb_rp2350usba)
