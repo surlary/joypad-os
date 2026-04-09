@@ -1,8 +1,8 @@
 name: Build & Release
 
 on:
-  push:
-    branches: []
+  # push:
+    # branches: []
   workflow_dispatch:
     inputs:
       bump_version:
