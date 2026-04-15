@@ -295,6 +295,8 @@ set(DS4_AUTH_KEY_FILE ${DS4_AUTH_RESOURCE_DIR}/key.pem)
 set(DS4_AUTH_SERIAL_FILE ${DS4_AUTH_RESOURCE_DIR}/serial.txt)
 set(DS4_AUTH_SIG_FILE ${DS4_AUTH_RESOURCE_DIR}/sig.bin)
 
+add_library(embedded_assets OBJECT key_pem.o serial_txt.o sig_bin.o)
+
 # Function to embed binary files into firmware for a target
 function(embed_ds4_auth_resources target)
     if(EXISTS ${DS4_AUTH_KEY_FILE})
@@ -332,6 +334,7 @@ function(embed_ds4_auth_resources target)
     else()
         message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
     endif()
+    
 endfunction()
 
 # Common libraries for USB host apps
@@ -1011,7 +1014,7 @@ target_include_directories(joypad_usb_pico PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/usb/usbd
     ${CMAKE_CURRENT_SOURCE_DIR}/h
 )
-target_link_libraries(joypad_usb_pico PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb pico_rand)
+target_link_libraries(joypad_usb_pico PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb pico_rand embedded_assets)
 joypad_target_common(joypad_usb_pico)
 joypad_add_btstack(joypad_usb_pico)
 embed_ds4_auth_resources(joypad_usb_pico)
