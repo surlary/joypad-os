@@ -302,16 +302,15 @@ add_library(embedded_assets INTERFACE)
 function(embed_ds4_auth_resources target)
     if(EXISTS ${DS4_AUTH_KEY_FILE})
         # Use objcopy to convert binary files to object files with symbols
-        add_custom_command(OUTPUT key_pem.o
+        add_custom_command(OUTPUT key_pem_${target}.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
-                    ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o
+                    ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o
             DEPENDS ${DS4_AUTH_KEY_FILE}
             VERBATIM)
-        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o)
         # Add the object file as a library to ensure it's linked properly
-        # Use global names for the libraries to ensure PS4 mode can access the symbols
         add_library(key_pem_obj_${target} OBJECT IMPORTED)
-        set_target_properties(key_pem_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        set_target_properties(key_pem_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o)
         target_link_libraries(${target} PRIVATE key_pem_obj_${target})
         message(STATUS "Added key.pem for PS4 auth")
     else()
@@ -320,15 +319,15 @@ function(embed_ds4_auth_resources target)
     
     if(EXISTS ${DS4_AUTH_SERIAL_FILE})
         # Use objcopy to convert binary files to object files with symbols
-        add_custom_command(OUTPUT serial_txt.o
+        add_custom_command(OUTPUT serial_txt_${target}.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
-                    ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o
+                    ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o
             DEPENDS ${DS4_AUTH_SERIAL_FILE}
             VERBATIM)
-        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o)
         # Add the object file as a library to ensure it's linked properly
         add_library(serial_txt_obj_${target} OBJECT IMPORTED)
-        set_target_properties(serial_txt_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        set_target_properties(serial_txt_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o)
         target_link_libraries(${target} PRIVATE serial_txt_obj_${target})
         message(STATUS "Added serial.txt for PS4 auth")
     else()
@@ -337,6 +336,63 @@ function(embed_ds4_auth_resources target)
     
     if(EXISTS ${DS4_AUTH_SIG_FILE})
         # Use objcopy to convert binary files to object files with symbols
+        add_custom_command(OUTPUT sig_bin_${target}.o
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
+                    ${DS4_AUTH_SIG_FILE} ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o
+            DEPENDS ${DS4_AUTH_SIG_FILE}
+            VERBATIM)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(sig_bin_obj_${target} OBJECT IMPORTED)
+        set_target_properties(sig_bin_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o)
+        target_link_libraries(${target} PRIVATE sig_bin_obj_${target})
+        message(STATUS "Added sig.bin for PS4 auth")
+    else()
+        message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
+    endif()
+    
+    # Add the embedded_assets interface library to the target
+    target_link_libraries(${target} PRIVATE embedded_assets)
+endfunction()
+
+# Function to embed binary files with global symbols for PS4 mode (only for targets that need PS4 mode)
+function(embed_ds4_auth_resources_global target)
+    if(EXISTS ${DS4_AUTH_KEY_FILE})
+        # Use objcopy to convert binary files to object files with global symbols
+        add_custom_command(OUTPUT key_pem.o
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
+                    ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o
+            DEPENDS ${DS4_AUTH_KEY_FILE}
+            VERBATIM)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(key_pem_obj OBJECT IMPORTED)
+        set_target_properties(key_pem_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        target_link_libraries(${target} PRIVATE key_pem_obj)
+        message(STATUS "Added key.pem for PS4 auth")
+    else()
+        message(WARNING "key.pem not found at ${DS4_AUTH_KEY_FILE}, PS4 auth will fail")
+    endif()
+    
+    if(EXISTS ${DS4_AUTH_SERIAL_FILE})
+        # Use objcopy to convert binary files to object files with global symbols
+        add_custom_command(OUTPUT serial_txt.o
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
+                    ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o
+            DEPENDS ${DS4_AUTH_SERIAL_FILE}
+            VERBATIM)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(serial_txt_obj OBJECT IMPORTED)
+        set_target_properties(serial_txt_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        target_link_libraries(${target} PRIVATE serial_txt_obj)
+        message(STATUS "Added serial.txt for PS4 auth")
+    else()
+        message(WARNING "serial.txt not found at ${DS4_AUTH_SERIAL_FILE}, PS4 auth will fail")
+    endif()
+    
+    if(EXISTS ${DS4_AUTH_SIG_FILE})
+        # Use objcopy to convert binary files to object files with global symbols
         add_custom_command(OUTPUT sig_bin.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
                     ${DS4_AUTH_SIG_FILE} ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o
@@ -344,9 +400,9 @@ function(embed_ds4_auth_resources target)
             VERBATIM)
         target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
         # Add the object file as a library to ensure it's linked properly
-        add_library(sig_bin_obj_${target} OBJECT IMPORTED)
-        set_target_properties(sig_bin_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
-        target_link_libraries(${target} PRIVATE sig_bin_obj_${target})
+        add_library(sig_bin_obj OBJECT IMPORTED)
+        set_target_properties(sig_bin_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
+        target_link_libraries(${target} PRIVATE sig_bin_obj)
         message(STATUS "Added sig.bin for PS4 auth")
     else()
         message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
@@ -1036,7 +1092,7 @@ target_include_directories(joypad_usb_pico PUBLIC
 target_link_libraries(joypad_usb_pico PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb pico_rand embedded_assets)
 joypad_target_common(joypad_usb_pico)
 joypad_add_btstack(joypad_usb_pico)
-embed_ds4_auth_resources(joypad_usb_pico)
+embed_ds4_auth_resources_global(joypad_usb_pico)
 
 # --- USB to USB (Raspberry Pi Pico W, PIO-USB) ---
 # PIO USB host on GP16/GP17, no WS2812, LED behind CYW43
@@ -1057,7 +1113,7 @@ target_include_directories(joypad_usb_pico_w PUBLIC
 target_link_libraries(joypad_usb_pico_w PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_pico_w)
 joypad_add_btstack(joypad_usb_pico_w)
-embed_ds4_auth_resources(joypad_usb_pico_w)
+embed_ds4_auth_resources_global(joypad_usb_pico_w)
 
 # --- USB to USB (Raspberry Pi Pico 2 W, PIO-USB) ---
 # PIO USB host on GP16/GP17, no WS2812, LED behind CYW43
@@ -1078,7 +1134,7 @@ target_include_directories(joypad_usb_pico2_w PUBLIC
 target_link_libraries(joypad_usb_pico2_w PRIVATE ${COMMON_LIBRARIES} tinyusb_device tinyusb_pico_pio_usb)
 joypad_target_common(joypad_usb_pico2_w)
 joypad_add_btstack(joypad_usb_pico2_w)
-embed_ds4_auth_resources(joypad_usb_pico2_w)
+embed_ds4_auth_resources_global(joypad_usb_pico2_w)
 
 # --- USB to USB (RP2040-Zero, PIO-USB) ---
 add_executable(joypad_usb_rp2040zero)
