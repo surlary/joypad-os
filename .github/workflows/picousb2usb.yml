@@ -49,7 +49,7 @@ jobs:
         id: build
         run: |
           echo "=== Building usb2usb_pico ==="
-          make usb2usb_pico
+          make usb2usb_pico usb2usb_rp2040zero
           
           echo "=== Build output ==="
           ls -lh releases/*.uf2
