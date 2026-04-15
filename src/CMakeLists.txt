@@ -308,6 +308,10 @@ function(embed_ds4_auth_resources target)
             DEPENDS ${DS4_AUTH_KEY_FILE}
             VERBATIM)
         target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(key_pem_obj OBJECT IMPORTED)
+        set_target_properties(key_pem_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        target_link_libraries(${target} PRIVATE key_pem_obj)
         message(STATUS "Added key.pem for PS4 auth")
     else()
         message(WARNING "key.pem not found at ${DS4_AUTH_KEY_FILE}, PS4 auth will fail")
@@ -321,6 +325,10 @@ function(embed_ds4_auth_resources target)
             DEPENDS ${DS4_AUTH_SERIAL_FILE}
             VERBATIM)
         target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(serial_txt_obj OBJECT IMPORTED)
+        set_target_properties(serial_txt_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        target_link_libraries(${target} PRIVATE serial_txt_obj)
         message(STATUS "Added serial.txt for PS4 auth")
     else()
         message(WARNING "serial.txt not found at ${DS4_AUTH_SERIAL_FILE}, PS4 auth will fail")
@@ -334,6 +342,10 @@ function(embed_ds4_auth_resources target)
             DEPENDS ${DS4_AUTH_SIG_FILE}
             VERBATIM)
         target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
+        # Add the object file as a library to ensure it's linked properly
+        add_library(sig_bin_obj OBJECT IMPORTED)
+        set_target_properties(sig_bin_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
+        target_link_libraries(${target} PRIVATE sig_bin_obj)
         message(STATUS "Added sig.bin for PS4 auth")
     else()
         message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
