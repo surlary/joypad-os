@@ -312,6 +312,16 @@ function(embed_ds4_auth_resources target)
         add_library(key_pem_obj_${target} OBJECT IMPORTED)
         set_target_properties(key_pem_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o)
         target_link_libraries(${target} PRIVATE key_pem_obj_${target})
+        
+        # Create symbol aliases for PS4 mode compatibility using linker options
+        set(FULL_PATH_KEY_FILE ${DS4_AUTH_KEY_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_KEY "${FULL_PATH_KEY_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_KEY "${ESCAPED_PATH_KEY}")
+        target_link_options(${target} PRIVATE
+            "LINKER:--defsym,_binary_key_pem_start=_binary_${ESCAPED_PATH_KEY}_start"
+            "LINKER:--defsym,_binary_key_pem_end=_binary_${ESCAPED_PATH_KEY}_end"
+            "LINKER:--defsym,_binary_key_pem_size=_binary_${ESCAPED_PATH_KEY}_size"
+        )
         message(STATUS "Added key.pem for PS4 auth")
     else()
         message(WARNING "key.pem not found at ${DS4_AUTH_KEY_FILE}, PS4 auth will fail")
@@ -329,6 +339,16 @@ function(embed_ds4_auth_resources target)
         add_library(serial_txt_obj_${target} OBJECT IMPORTED)
         set_target_properties(serial_txt_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o)
         target_link_libraries(${target} PRIVATE serial_txt_obj_${target})
+        
+        # Create symbol aliases for PS4 mode compatibility using linker options
+        set(FULL_PATH_SERIAL_FILE ${DS4_AUTH_SERIAL_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_SERIAL "${FULL_PATH_SERIAL_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_SERIAL "${ESCAPED_PATH_SERIAL}")
+        target_link_options(${target} PRIVATE
+            "LINKER:--defsym,_binary_serial_txt_start=_binary_${ESCAPED_PATH_SERIAL}_start"
+            "LINKER:--defsym,_binary_serial_txt_end=_binary_${ESCAPED_PATH_SERIAL}_end"
+            "LINKER:--defsym,_binary_serial_txt_size=_binary_${ESCAPED_PATH_SERIAL}_size"
+        )
         message(STATUS "Added serial.txt for PS4 auth")
     else()
         message(WARNING "serial.txt not found at ${DS4_AUTH_SERIAL_FILE}, PS4 auth will fail")
@@ -346,6 +366,16 @@ function(embed_ds4_auth_resources target)
         add_library(sig_bin_obj_${target} OBJECT IMPORTED)
         set_target_properties(sig_bin_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o)
         target_link_libraries(${target} PRIVATE sig_bin_obj_${target})
+        
+        # Create symbol aliases for PS4 mode compatibility using linker options
+        set(FULL_PATH_SIG_FILE ${DS4_AUTH_SIG_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_SIG "${FULL_PATH_SIG_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_SIG "${ESCAPED_PATH_SIG}")
+        target_link_options(${target} PRIVATE
+            "LINKER:--defsym,_binary_sig_bin_start=_binary_${ESCAPED_PATH_SIG}_start"
+            "LINKER:--defsym,_binary_sig_bin_end=_binary_${ESCAPED_PATH_SIG}_end"
+            "LINKER:--defsym,_binary_sig_bin_size=_binary_${ESCAPED_PATH_SIG}_size"
+        )
         message(STATUS "Added sig.bin for PS4 auth")
     else()
         message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
@@ -371,10 +401,14 @@ function(embed_ds4_auth_resources_global target)
         target_link_libraries(${target} PRIVATE key_pem_obj_${target})
         
         # Create symbol aliases for PS4 mode compatibility using linker options
-        # objcopy creates symbols like _binary_key_pem_joypad_usb_pico_start, map to _binary_key_pem_start
+        # objcopy creates symbols with full path like _binary__home_runner_work_joypad_os_joypad_os_src_usb_usbd_modes_key_pem_start
+        set(FULL_PATH_KEY_FILE ${DS4_AUTH_KEY_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_KEY "${FULL_PATH_KEY_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_KEY "${ESCAPED_PATH_KEY}")
         target_link_options(${target} PRIVATE
-            "LINKER:--defsym,_binary_key_pem_start=_binary_key_pem_${target}_start"
-            "LINKER:--defsym,_binary_key_pem_end=_binary_key_pem_${target}_end"
+            "LINKER:--defsym,_binary_key_pem_start=_binary_${ESCAPED_PATH_KEY}_start"
+            "LINKER:--defsym,_binary_key_pem_end=_binary_${ESCAPED_PATH_KEY}_end"
+            "LINKER:--defsym,_binary_key_pem_size=_binary_${ESCAPED_PATH_KEY}_size"
         )
         message(STATUS "Added key.pem for PS4 auth")
     else()
@@ -395,9 +429,13 @@ function(embed_ds4_auth_resources_global target)
         target_link_libraries(${target} PRIVATE serial_txt_obj_${target})
         
         # Create symbol aliases for PS4 mode compatibility using linker options
+        set(FULL_PATH_SERIAL_FILE ${DS4_AUTH_SERIAL_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_SERIAL "${FULL_PATH_SERIAL_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_SERIAL "${ESCAPED_PATH_SERIAL}")
         target_link_options(${target} PRIVATE
-            "LINKER:--defsym,_binary_serial_txt_start=_binary_serial_txt_${target}_start"
-            "LINKER:--defsym,_binary_serial_txt_end=_binary_serial_txt_${target}_end"
+            "LINKER:--defsym,_binary_serial_txt_start=_binary_${ESCAPED_PATH_SERIAL}_start"
+            "LINKER:--defsym,_binary_serial_txt_end=_binary_${ESCAPED_PATH_SERIAL}_end"
+            "LINKER:--defsym,_binary_serial_txt_size=_binary_${ESCAPED_PATH_SERIAL}_size"
         )
         message(STATUS "Added serial.txt for PS4 auth")
     else()
@@ -418,9 +456,13 @@ function(embed_ds4_auth_resources_global target)
         target_link_libraries(${target} PRIVATE sig_bin_obj_${target})
         
         # Create symbol aliases for PS4 mode compatibility using linker options
+        set(FULL_PATH_SIG_FILE ${DS4_AUTH_SIG_FILE})
+        string(REPLACE "/" "_" ESCAPED_PATH_SIG "${FULL_PATH_SIG_FILE}")
+        string(REPLACE "." "_" ESCAPED_PATH_SIG "${ESCAPED_PATH_SIG}")
         target_link_options(${target} PRIVATE
-            "LINKER:--defsym,_binary_sig_bin_start=_binary_sig_bin_${target}_start"
-            "LINKER:--defsym,_binary_sig_bin_end=_binary_sig_bin_${target}_end"
+            "LINKER:--defsym,_binary_sig_bin_start=_binary_${ESCAPED_PATH_SIG}_start"
+            "LINKER:--defsym,_binary_sig_bin_end=_binary_${ESCAPED_PATH_SIG}_end"
+            "LINKER:--defsym,_binary_sig_bin_size=_binary_${ESCAPED_PATH_SIG}_size"
         )
         message(STATUS "Added sig.bin for PS4 auth")
     else()
