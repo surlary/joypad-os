@@ -41,6 +41,9 @@ static uint8_t ps4_auth_nonce_buffer[256];  // nonce缓冲区
 static uint8_t cur_nonce_id = 1;
 static uint8_t send_nonce_part = 0;
 
+// 存储转换后的二进制序列号
+static uint8_t ps4_serial_binary[16] = {};
+
 // mbedtls上下文
 static mbedtls_pk_context pk;
 
@@ -112,6 +115,63 @@ static uint32_t ps4_crc32(uint32_t crc, const void *buf, size_t size) {
     return ~crc;
 }
 
+// Helper function to convert a hex character to its integer value
+static uint8_t hex_char_to_int(char c)
+{
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    return 0; // Invalid hex character
+}
+
+// Helper function to convert hex string to binary data
+static void hex_string_to_binary(const unsigned char *hex_str, size_t hex_len, uint8_t *output, size_t output_size)
+{
+    size_t output_idx = 0;
+    size_t i = 0;
+    
+    // Process the hex string in pairs of characters
+    while (i < hex_len && output_idx < output_size) {
+        // Skip non-hex characters (like spaces or newlines)
+        if (!((hex_str[i] >= '0' && hex_str[i] <= '9') || 
+              (hex_str[i] >= 'A' && hex_str[i] <= 'F') || 
+              (hex_str[i] >= 'a' && hex_str[i] <= 'f'))) {
+            i++;
+            continue;
+        }
+        
+        // Make sure we have a pair of hex characters
+        if (i + 1 < hex_len) {
+            uint8_t high_nibble = hex_char_to_int(hex_str[i]);
+            uint8_t low_nibble = hex_char_to_int(hex_str[i + 1]);
+            output[output_idx] = (high_nibble << 4) | low_nibble;
+            output_idx++;
+            i += 2; // Move to next pair
+        } else {
+            // Odd number of hex characters - treat as error, skip
+            i++;
+        }
+    }
+    
+    // If we have space left in the output buffer, pad with zeros at the beginning
+    if (output_idx < output_size) {
+        // Shift the data to the right and fill the beginning with zeros
+        size_t data_start = output_size - output_idx;
+        // Move existing data to the right
+        for (int j = output_idx - 1; j >= 0; j--) {
+            output[data_start + j] = output[j];
+        }
+        // Fill the beginning with zeros
+        for (size_t j = 0; j < data_start; j++) {
+            output[j] = 0;
+        }
+    }
+}
+
 // 随机数生成函数
 static int ps4_rng(void *p_rng, unsigned char *p, size_t len) {
     (void)p_rng;
@@ -145,7 +205,7 @@ static void ps4_sign_nonce(void) {
         int offset = 0;
         memcpy(&ps4_auth_buffer[offset], nonce_signature, 256);
         offset += 256;
-        memcpy(&ps4_auth_buffer[offset], ps4_serial_start, 16);
+        memcpy(&ps4_auth_buffer[offset], ps4_serial_binary, 16);
         offset += 16;
         
         // 导出RSA参数 - 使用mbedtls_rsa_export_raw (mbedTLS v3.x兼容)
@@ -199,6 +259,10 @@ static void ps4_auth_init(void) {
     ps4_auth_state = PS4_AUTH_NO_NONCE;
     memset(ps4_auth_buffer, 0, sizeof(ps4_auth_buffer));
     memset(ps4_auth_nonce_buffer, 0, sizeof(ps4_auth_nonce_buffer));
+    
+    // Convert hex string from serial.txt to binary and store in global variable
+    size_t serial_len = ps4_serial_end - ps4_serial_start;
+    hex_string_to_binary(ps4_serial_start, serial_len, ps4_serial_binary, 16);
     
     // 初始化mbedtls和私钥
     mbedtls_pk_init(&pk);
