@@ -359,16 +359,16 @@ endfunction()
 function(embed_ds4_auth_resources_global target)
     if(EXISTS ${DS4_AUTH_KEY_FILE})
         # Use objcopy to convert binary files to object files with global symbols
-        add_custom_command(OUTPUT key_pem.o
+        add_custom_command(OUTPUT key_pem_${target}.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
-                    ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o
+                    ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o
             DEPENDS ${DS4_AUTH_KEY_FILE}
             VERBATIM)
-        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o)
         # Add the object file as a library to ensure it's linked properly
-        add_library(key_pem_obj OBJECT IMPORTED)
-        set_target_properties(key_pem_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o)
-        target_link_libraries(${target} PRIVATE key_pem_obj)
+        add_library(key_pem_obj_${target} OBJECT IMPORTED)
+        set_target_properties(key_pem_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/key_pem_${target}.o)
+        target_link_libraries(${target} PRIVATE key_pem_obj_${target})
         message(STATUS "Added key.pem for PS4 auth")
     else()
         message(WARNING "key.pem not found at ${DS4_AUTH_KEY_FILE}, PS4 auth will fail")
@@ -376,16 +376,16 @@ function(embed_ds4_auth_resources_global target)
     
     if(EXISTS ${DS4_AUTH_SERIAL_FILE})
         # Use objcopy to convert binary files to object files with global symbols
-        add_custom_command(OUTPUT serial_txt.o
+        add_custom_command(OUTPUT serial_txt_${target}.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
-                    ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o
+                    ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o
             DEPENDS ${DS4_AUTH_SERIAL_FILE}
             VERBATIM)
-        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o)
         # Add the object file as a library to ensure it's linked properly
-        add_library(serial_txt_obj OBJECT IMPORTED)
-        set_target_properties(serial_txt_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o)
-        target_link_libraries(${target} PRIVATE serial_txt_obj)
+        add_library(serial_txt_obj_${target} OBJECT IMPORTED)
+        set_target_properties(serial_txt_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/serial_txt_${target}.o)
+        target_link_libraries(${target} PRIVATE serial_txt_obj_${target})
         message(STATUS "Added serial.txt for PS4 auth")
     else()
         message(WARNING "serial.txt not found at ${DS4_AUTH_SERIAL_FILE}, PS4 auth will fail")
@@ -393,16 +393,16 @@ function(embed_ds4_auth_resources_global target)
     
     if(EXISTS ${DS4_AUTH_SIG_FILE})
         # Use objcopy to convert binary files to object files with global symbols
-        add_custom_command(OUTPUT sig_bin.o
+        add_custom_command(OUTPUT sig_bin_${target}.o
             COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
-                    ${DS4_AUTH_SIG_FILE} ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o
+                    ${DS4_AUTH_SIG_FILE} ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o
             DEPENDS ${DS4_AUTH_SIG_FILE}
             VERBATIM)
-        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o)
         # Add the object file as a library to ensure it's linked properly
-        add_library(sig_bin_obj OBJECT IMPORTED)
-        set_target_properties(sig_bin_obj PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o)
-        target_link_libraries(${target} PRIVATE sig_bin_obj)
+        add_library(sig_bin_obj_${target} OBJECT IMPORTED)
+        set_target_properties(sig_bin_obj_${target} PROPERTIES IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/sig_bin_${target}.o)
+        target_link_libraries(${target} PRIVATE sig_bin_obj_${target})
         message(STATUS "Added sig.bin for PS4 auth")
     else()
         message(WARNING "sig.bin not found at ${DS4_AUTH_SIG_FILE}, PS4 auth will fail")
