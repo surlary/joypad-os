@@ -148,40 +148,24 @@ static void ps4_sign_nonce(void) {
         memcpy(&ps4_auth_buffer[offset], ps4_serial_start, 16);
         offset += 16;
         
-        // 导出RSA参数 - 使用mbedTLS v3.x兼容的方式
-        // 获取RSA参数并转换为二进制格式
-        const mbedtls_mpi *D = mbedtls_rsa_get_private_d(rsa);
-        const mbedtls_mpi *E = mbedtls_rsa_get_private_e(rsa);
+        // 导出RSA参数 - 使用mbedtls_rsa_export_raw (mbedTLS v3.x兼容)
+        unsigned char d_buf[256] = {0};
+        unsigned char e_buf[256] = {0};
         
-        if (D != NULL) {
-            size_t d_len = mbedtls_mpi_size(D);
-            if (d_len <= 256) {
-                mbedtls_mpi_write_binary(D, &ps4_auth_buffer[offset], 256);
-            } else {
-                // 如果D的长度超过256字节，只复制最后256字节
-                unsigned char temp_buf[512];
-                mbedtls_mpi_write_binary(D, temp_buf, d_len);
-                memcpy(&ps4_auth_buffer[offset], temp_buf + (d_len - 256), 256);
-            }
+        int ret = mbedtls_rsa_export_raw(rsa, NULL, 0, NULL, 0, NULL, 0, d_buf, 256, e_buf, 256);
+        if (ret == 0) {
+            memcpy(&ps4_auth_buffer[offset], d_buf, 256);
+            offset += 256;
+            memcpy(&ps4_auth_buffer[offset], e_buf, 256);
+            offset += 256;
         } else {
+            // 如果导出失败，填充零
             memset(&ps4_auth_buffer[offset], 0, 256);
-        }
-        offset += 256;
-        
-        if (E != NULL) {
-            size_t e_len = mbedtls_mpi_size(E);
-            if (e_len <= 256) {
-                mbedtls_mpi_write_binary(E, &ps4_auth_buffer[offset], 256);
-            } else {
-                // 如果E的长度超过256字节，只复制最后256字节
-                unsigned char temp_buf[512];
-                mbedtls_mpi_write_binary(E, temp_buf, e_len);
-                memcpy(&ps4_auth_buffer[offset], temp_buf + (e_len - 256), 256);
-            }
-        } else {
+            offset += 256;
             memset(&ps4_auth_buffer[offset], 0, 256);
+            offset += 256;
+            printf("PS4: RSA export failed: %d\n", ret);
         }
-        offset += 256;
         memcpy(&ps4_auth_buffer[offset], ps4_signature_start, 256);
         offset += 256;
         memset(&ps4_auth_buffer[offset], 0, 24);
