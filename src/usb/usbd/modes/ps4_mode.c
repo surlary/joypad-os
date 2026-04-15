@@ -8,6 +8,7 @@
 #include "descriptors/ps4_descriptors.h"
 #include "core/buttons.h"
 #include <string.h>
+#include <stdint.h>
 #include "pico/rand.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/rsa.h"
@@ -53,7 +54,16 @@ static ps4_out_report_t ps4_output;
 static bool ps4_output_available = false;
 static uint8_t ps4_report_counter = 0;
 
-uint32_t pico_rand(void) { return get_rand_32(); }
+void pico_rand(void *buf, size_t len) {
+    uint8_t *p = (uint8_t *)buf;
+    while (len) {
+        uint32_t r = get_rand_32();
+        size_t n = len < 4 ? len : 4;
+        memcpy(p, &r, n);
+        p += n;
+        len -= n;
+    }
+}
 
 // CRC32实现 (IEEE 802.3标准)
 static uint32_t ps4_crc32(uint32_t crc, const void *buf, size_t size) {
