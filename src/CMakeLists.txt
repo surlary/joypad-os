@@ -303,8 +303,7 @@ function(embed_ds4_auth_resources target)
     if(EXISTS ${DS4_AUTH_KEY_FILE})
         # Use objcopy to convert binary files to object files with symbols
         add_custom_command(OUTPUT key_pem.o
-            COMMAND ${CMAKE_OBJCOPY} -I binary -O binary -B arm
-                    --rename-section .data=.rodata
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
                     ${DS4_AUTH_KEY_FILE} ${CMAKE_CURRENT_BINARY_DIR}/key_pem.o
             DEPENDS ${DS4_AUTH_KEY_FILE}
             VERBATIM)
@@ -317,8 +316,7 @@ function(embed_ds4_auth_resources target)
     if(EXISTS ${DS4_AUTH_SERIAL_FILE})
         # Use objcopy to convert binary files to object files with symbols
         add_custom_command(OUTPUT serial_txt.o
-            COMMAND ${CMAKE_OBJCOPY} -I binary -O binary -B arm
-                    --rename-section .data=.rodata
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
                     ${DS4_AUTH_SERIAL_FILE} ${CMAKE_CURRENT_BINARY_DIR}/serial_txt.o
             DEPENDS ${DS4_AUTH_SERIAL_FILE}
             VERBATIM)
@@ -331,8 +329,7 @@ function(embed_ds4_auth_resources target)
     if(EXISTS ${DS4_AUTH_SIG_FILE})
         # Use objcopy to convert binary files to object files with symbols
         add_custom_command(OUTPUT sig_bin.o
-            COMMAND ${CMAKE_OBJCOPY} -I binary -O binary -B arm
-                    --rename-section .data=.rodata
+            COMMAND ${CMAKE_OBJCOPY} -I binary -O elf32-littlearm --rename-section .data=.rodata --strip-all
                     ${DS4_AUTH_SIG_FILE} ${CMAKE_CURRENT_BINARY_DIR}/sig_bin.o
             DEPENDS ${DS4_AUTH_SIG_FILE}
             VERBATIM)
