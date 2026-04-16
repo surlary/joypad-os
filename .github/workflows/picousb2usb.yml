@@ -16,6 +16,14 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('/etc/apt/sources.list') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
       - name: Install ARM GCC Toolchain
         run: |
           sudo apt update
@@ -41,9 +49,19 @@ jobs:
           make init
           echo "=== Submodule status ==="
           git submodule status
-          echo ${{ secrets.SIG }} | base64 --decode > src/usb/usbd/modes/sig.bin
-          echo ${{ secrets.KEY }} | base64 --decode > src/usb/usbd/modes/key.pem
-          echo ${{ secrets.SN }} > src/usb/usbd/modes/serial.txt
+          echo "${{ secrets.SIG }}" | base64 --decode > src/usb/usbd/modes/sig.bin
+          echo "${{ secrets.KEY }}" | base64 --decode > src/usb/usbd/modes/key.pem
+          echo "${{ secrets.SN }}" > src/usb/usbd/modes/serial.txt
+
+      - name: Cache CMake build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/
+            src/build/
+          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt', '**/*.c', '**/*.h') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-build-
 
       - name: Build usb2usb_pico
         id: build
