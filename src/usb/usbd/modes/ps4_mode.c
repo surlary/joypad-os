@@ -212,7 +212,14 @@ static void ps4_sign_nonce(void) {
         unsigned char d_buf[256] = {0};
         unsigned char e_buf[256] = {0};
         
-        int export_ret = mbedtls_rsa_export_raw(rsa, NULL, 0, NULL, 0, NULL, 0, d_buf, 256, e_buf, 256);
+        // int export_ret = mbedtls_rsa_export_raw(rsa, NULL, 0, NULL, 0, NULL, 0, d_buf, 256, e_buf, 256);
+        int export_ret = mbedtls_rsa_export_raw(rsa, 
+                                                n_buf, 256,  // N - 模数
+                                                NULL, 0,     // P - 不需要
+                                                NULL, 0,     // Q - 不需要
+                                                NULL, 0,     // D - 不需要
+                                                e_buf, 256); // E - 公钥指数
+        
         if (export_ret == 0) {
             memcpy(&ps4_auth_buffer[offset], d_buf, 256);
             offset += 256;
