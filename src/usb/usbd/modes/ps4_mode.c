@@ -14,6 +14,11 @@
 #include "mbedtls/rsa.h"
 #include "mbedtls/sha256.h"
 
+#ifndef DISABLE_USB_HOST
+#include "usb/usbh/hid/devices/vendors/sony/sony_ds4.h"
+#endif
+
+
 extern const unsigned char key_pem_start[] asm("_binary_key_pem_start");
 extern const unsigned char key_pem_end[] asm("_binary_key_pem_end");
 extern const unsigned char ps4_serial_start[] asm("_binary_serial_txt_start");
